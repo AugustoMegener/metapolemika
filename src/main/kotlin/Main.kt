@@ -1,10 +1,10 @@
 package kito.metapolemika
 
 import kito.metapolemika.discord.DiscordApp
-import kito.metapolemika.discord.command.RegisterCommand
+import kito.metapolemika.reflect.ObjectRegister
 
 suspend fun main() {
-    RegisterCommand.scan()
+    ObjectRegister.register()
 
     DiscordApp.start()
 }

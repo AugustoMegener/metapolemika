@@ -1,22 +1,13 @@
 package kito.metapolemika.reflect
 
+import io.ktor.util.*
 import kito.metapolemika.asPackageName
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.reflect.KClass
 
-abstract class ObjectProcessor<T> {
-    open val directory: String = "src/main/kotlin"
+abstract class ObjectScanner<T> : ReflectScanner<T>() {
 
-    val registry = mutableListOf<T>()
-
-    abstract fun shouldInclude(clazz: KClass<*>) : Boolean
-
-    fun scan() {
-        File(directory).listFiles()?.filter { it.extension == "kt" } ?.forEach {
-            val clazz = Class.forName(it.path.asPackageName).kotlin
-
-            if (shouldInclude(clazz))
-                @Suppress("UNCHECKED_CAST") (clazz.objectInstance as? T)?.let { o -> registry += o }
-        }
-    }
+    @Suppress("UNCHECKED_CAST")
+    override fun cast(clazz: KClass<*>) = clazz.objectInstance as? T
 }

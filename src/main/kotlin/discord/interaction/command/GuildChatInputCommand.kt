@@ -1,11 +1,13 @@
-package kito.metapolemika.discord.command
+package kito.metapolemika.discord.interaction.command
 
 import dev.kord.core.entity.interaction.InteractionCommand
 import dev.kord.core.event.interaction.GuildChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.interaction.BaseChoiceBuilder
 import dev.kord.rest.builder.interaction.BaseInputChatBuilder
+import kito.metapolemika.reflect.ObjectRegister
 import kotlin.reflect.KProperty
 
+@ObjectRegister.Registry("GCI_COMMAND")
 abstract class GuildChatInputCommand(val name: String, val description: String) {
 
     internal val inputs = arrayListOf<CommandInput<*, *>>()

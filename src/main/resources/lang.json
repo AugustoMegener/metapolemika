@@ -1,0 +1,35 @@
+{
+  "form.sheet.field.name.symbol": "Símbolo",
+  "form.sheet.field.name.name": "Nome",
+  "form.sheet.field.name.description": "Descrição",
+  "form.sheet.field.name.appearance_description": "Descrição da aparência",
+  "form.sheet.field.name.appearance_image_address": "Link de Imagem de Aparência",
+  "form.sheet.field.name.trivia": "Curiosidades",
+  "form.sheet.field.name.web_page": "Página de conteudo suplementar",
+
+  "form.sheet.field.instruction.symbol": "Nome em PascalCase, de 2 a 50 caracteres, para uso em sistemas (ex: João Pedro -> JoaoPedro).",
+  "form.sheet.field.instruction.name": "Nome de exibição",
+  "form.sheet.field.instruction.description": "Descreva o objeto da ficha de forma geral, sem incluir habilidades, que terão fichas separadas.",
+  "form.sheet.field.instruction.appearance_description": "Descreva a aparência do objeto da ficha, pode ser omitido caso uma imagem seja fornecida.",
+  "form.sheet.field.instruction.appearance_image_address": "Link direto para uma imagem do objeto da ficha, é requerido caso não tenha preenchido o campo acima.",
+  "form.sheet.field.instruction.trivia": "Curiosidades sobre o objeto da ficha.",
+  "form.sheet.field.instruction.web_page": "Se gostar de escrever, adicione um link para mais detalhes sobre o objeto da ficha.",
+
+  "form.sheet.field.error.symbol": "Simbolos devem ser em [PascalCase](https://www.alura.com.br/artigos/convencoes-nomenclatura-camel-pascal-kebab-snake-case#pascal-case).",
+  "form.sheet.field.error.appearance_image_address":"Não é um link válido ou não provêm uma imagem.",
+  "form.sheet.field.error.web_page": "Não é um link válido.",
+
+  "form.sheet.character.field.name.age": "Idade",
+  "form.sheet.character.field.instruction.age": "Idade do persongem.",
+  "form.sheet.character.field.error.age_not_num": "Deve ter apenas o número de anos de idade.",
+  "form.sheet.character.field.error.age_out_range": "A idade do personagem deve ser positiva e ser menor que 1 bilhão (o que já é cômicamente exagerado).",
+
+  "form.sheet.character.field.name.lineage": "Linhagem",
+  "form.sheet.character.field.instruction.lineage": "Ex: Humano, elfo, etc...",
+
+  "form.sheet.character.field.name.pronouns": "Pronomes",
+  "form.sheet.character.field.instruction.pronouns": "Ele/Dele, Ela/Dela, Elu/Delu, Use o nome, etc...",
+
+  "form.sheet.character.field.name.personality": "Personalidade",
+  "form.sheet.character.field.instruction.personality": "Descreva como o personagem se comporta e como se relaciona com outras pessoas."
+}

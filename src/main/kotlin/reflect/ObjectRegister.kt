@@ -1,24 +1,20 @@
 package kito.metapolemika.reflect
 
-import javax.naming.Name
 import kotlin.reflect.KClass
 import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.full.isSubclassOf
 
 object ObjectRegister : ObjectScanner<Any>() {
 
-    internal val registriesMap = HashMap<String, ObjectRegistry<*>>()
-    val registries by lazy { HashMap(registriesMap) }
+    val registries = HashMap<String, ObjectRegistry<*>>()
 
 
     override fun shouldAccept(clazz: KClass<*>) = clazz.hasAnnotation<Register>()
 
     override fun accept(obj: Any)
-        { registriesMap[(obj::class.annotations.first { it is Register } as Register).id]?.register(obj) }
+        { (obj::class.annotations.filterIsInstance<Register>().forEach { this.registries[it.id]?.register(obj) }) }
 
     @Suppress("UNCHECKED_CAST")
-    inline fun <reified T : Any> of(): ObjectRegistry<T> =
-        registries.values.first { it.type.isSubclassOf(T::class)} as ObjectRegistry<T>
+    inline fun <reified T : Any> of(id: String): ObjectRegistry<T> = this.registries[id]!! as ObjectRegistry<T>
 
 
     fun register() {
@@ -41,16 +37,16 @@ object ObjectRegister : ObjectScanner<Any>() {
         override fun shouldAccept(clazz: KClass<*>) = clazz.hasAnnotation<Registry>()
 
         override fun accept(obj: KClass<Any>) {
-            registriesMap[(obj.annotations.first { it is Registry } as Registry).id] = ObjectRegistry(obj)
+            registries[(obj.annotations.first { it is Registry } as Registry).id] = ObjectRegistry(obj)
         }
     }
-
 
     @Target(AnnotationTarget.CLASS)
     @Retention(AnnotationRetention.RUNTIME)
     annotation class Registry(val id: String)
 
 
+    @Repeatable
     @Target(AnnotationTarget.CLASS)
     @Retention(AnnotationRetention.RUNTIME)
     annotation class Register(val id: String)

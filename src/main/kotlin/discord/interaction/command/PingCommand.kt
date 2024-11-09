@@ -1,7 +1,12 @@
 package kito.metapolemika.discord.interaction.command
 
 import dev.kord.common.entity.DiscordPartialEmoji
+import dev.kord.core.behavior.interaction.followup.FollowupMessageBehavior
+import dev.kord.core.behavior.interaction.followup.edit
+import dev.kord.core.behavior.interaction.respondEphemeral
+import dev.kord.core.behavior.interaction.response.EphemeralMessageInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.response.edit
+import dev.kord.rest.builder.message.MessageBuilder
 import dev.kord.rest.builder.message.create.FollowupMessageCreateBuilder
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.commands.Arguments
@@ -20,6 +25,9 @@ import kito.metapolemika.discord.interaction.command.PingCommand.Args
 import kito.metapolemika.discord.interaction.modal.FormFieldEditorModal
 import kito.metapolemika.reflect.ObjectRegister
 import src.main.kotlin.discord.i18n.Translations.Commands.Sheet.New as Keys
+import kito.metapolemika.discord.interaction.command.PingCommand.MsgBehavior.FollowupBehavior
+import kito.metapolemika.discord.interaction.command.PingCommand.MsgBehavior.ResponseBehavior
+
 
 @OptIn(UnsafeAPI::class)
 private typealias Ctx = UnsafeCmdCtx<Args>
@@ -43,10 +51,15 @@ object PingCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.descr
     override suspend fun Ctx.commandAction(modal: UnsafeModalForm?) {
         val sheetBase = SheetBaseForm(user.id, arguments.type)
 
-        respondEphemeral { fieldEditResponse(this@commandAction, sheetBase) }
+        var message: FollowupMessageBehavior? = null
+
+        message = respondEphemeral {
+            fieldEditResponse(this@commandAction, sheetBase, FollowupBehavior { message!! })
+        }
     }
 
-    suspend fun FollowupMessageCreateBuilder.fieldEditResponse(ctx: Ctx, sheetBase: SheetBaseForm) {
+    private suspend fun MessageBuilder.fieldEditResponse(
+        ctx: Ctx, sheetBase: SheetBaseForm, message: MsgBehavior) {
         val locale = ctx.getLocale()
         
         Keys.Embed.let {
@@ -94,29 +107,54 @@ object PingCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.descr
                 initialResponse = InitialInteractionSelectMenuResponse.None
 
                 action {
+                    val modalForm = FormFieldEditorModal(sheetBase[selected.first().toInt()])
 
-                    FormFieldEditorModal(sheetBase[selected.first().toInt()])
-                        .let { it to it.sendAndDeferEphemeral(this)}
-                        .also { (modalForm, response) -> (response ?: return@also)
-                            val field = modalForm.field
+                    modalForm.sendAndAwait(ctx) { it ?: return@sendAndAwait
+                        val field = modalForm.field
+                        field.input = modalForm.text.value
 
-                            field.input = modalForm.text.value
-                            interactionResponse?.edit {
-                                embeds?.clear()
-                                components?.clear()
+                        when (message) {
+                            is FollowupBehavior -> {
+                                message.value().edit {
+                                    embeds = mutableListOf()
+                                    components = mutableListOf()
 
-                                val res = field.validation
-                                content = when (res) {
-                                    is Valid   -> "✅**${field.name.withLocale(locale).translate()}**"
-                                    is Invalid -> "❌**${field.name.withLocale(locale).translate()}:**" +
-                                                        res.message.withLocale(locale).translate()
+                                    val res = field.validation
+                                    val name = field.name.withLocale(locale).translate()
+
+                                    content = when (res) {
+                                        is Valid   -> "-# ✅**${name}**"
+                                        is Invalid -> "-# ❌**${name}:** " + res.message.withLocale(locale).translate()
+                                    }
                                 }
                             }
 
-                            respondEphemeral { fieldEditResponse(ctx, sheetBase) }
+                            is ResponseBehavior -> {
+                                message.value().edit {
+                                    embeds = mutableListOf()
+                                    components = mutableListOf()
+
+                                    val res = field.validation
+                                    val name = field.name.withLocale(locale).translate()
+
+                                    content = when (res) {
+                                        is Valid   -> "-# ✅**${name}**"
+                                        is Invalid -> "-# ❌**${name}:** " + res.message.withLocale(locale).translate()
+                                    }
+                                }
+                            }
                         }
+
+                        var msg: EphemeralMessageInteractionResponseBehavior? = null
+                            msg = it.respondEphemeral { fieldEditResponse(ctx, sheetBase, ResponseBehavior { msg!! })  }
+                    }
                 }
             }
         }
+    }
+
+    sealed class MsgBehavior {
+        class FollowupBehavior(val value: () -> FollowupMessageBehavior) : MsgBehavior()
+        class ResponseBehavior(val value: () -> EphemeralMessageInteractionResponseBehavior) : MsgBehavior()
     }
 }

@@ -50,9 +50,11 @@ dependencies {
 
     implementation("org.jetbrains.exposed:exposed-json:${project.property("exposed_version")}")
     implementation("org.jetbrains.exposed:exposed-money:${project.property("exposed_version")}")
-    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:" +
+            "${project.property("exposed_version")}")
 
     implementation("org.postgresql:postgresql:${project.property("postgresql_version")}")
+    implementation("mysql:mysql-connector-java:${project.property("mysql_version")}")
 
     implementation("org.jetbrains.kotlin:kotlin-scripting-common")
     implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")

@@ -11,8 +11,18 @@ import java.lang.System.getenv
 object DatabaseApp {
 
     fun start() {
-        Database.connect("jdbc:postgresql://localhost:5432/metapolemika", driver = "org.postgresql.Driver",
-            user = getenv("DB_USER"), password = getenv("DB_PASSWORD"))
+        getenv("SQL_DIALECT").let {
+
+            val config = when (it) { "postgresql" -> 5432 to "org.postgresql.Driver"
+                                     "mysql"      -> 3306 to "com.mysql.cj.jdbc.Driver"
+                                     else         -> throw IllegalStateException("Unknown $it SQL dialect.") }
+
+            Database.connect(
+                "jdbc:$it://localhost:${config.first}/metapolemika",
+                driver   = config.second,
+                user     = getenv("DB_USER"),
+                password = getenv("DB_PASSWORD"))
+        }
 
         transaction {
             ObjectRegister.of<IdTable<*>>("TABLE").forEach {

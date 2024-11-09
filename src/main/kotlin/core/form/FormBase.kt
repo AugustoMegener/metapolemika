@@ -1,13 +1,16 @@
 package kito.metapolemika.core.form
 
+import dev.kord.common.entity.DiscordPartialEmoji
+import dev.kordex.core.i18n.types.Key
 import kito.metapolemika.core.Validation
 import kito.metapolemika.core.Validation.Invalid
 import kito.metapolemika.core.Validation.Valid
 import kito.metapolemika.core.form.FieldMode.Defaulted
 import kito.metapolemika.core.form.FieldMode.Optional
 import okio.utf8Size
+import src.main.kotlin.discord.i18n.Translations.Forms.Sheet.Base.Field.Error
 
-abstract class FormBase<T>(val title: String) {
+abstract class FormBase<T>(val title: Key) {
 
     open val fields: ArrayList<Field<*>> = arrayListOf()
 
@@ -16,8 +19,9 @@ abstract class FormBase<T>(val title: String) {
     abstract fun mount() : T
     operator fun get(i: Int) = fields[i]
 
-    inner class Field<R>(val name         : String,
-                         val instructions : String,
+    inner class Field<R>(val emoji        : String,
+                         val name         : Key,
+                         val instructions : Key,
                          val sizeRange    : IntRange,
                          val mode         : FieldMode,
 
@@ -40,12 +44,13 @@ abstract class FormBase<T>(val title: String) {
             when {
                 isEmpty -> when(mode) {
                     is Optional -> Valid
-                    else -> Invalid("Este campo não deve estar vazio.")
+                    else -> Invalid(Error.empty)
                 }
 
                 else -> when {
                     input!!.utf8Size() !in sizeRange ->
-                        Invalid("Este campo deve ter entre ${sizeRange.first} e ${sizeRange.last} caracteres.")
+                        Invalid(Error.outRange.withNamedPlaceholders("{max}" to sizeRange.first,
+                                                                     "{min}" to sizeRange.last))
                     else -> validator(input!!)
                 }
             }
@@ -56,5 +61,9 @@ abstract class FormBase<T>(val title: String) {
 
             output?.let { applier(result, it) }
         }
+    }
+
+    companion object {
+        val pure: (String) -> String = { it }
     }
 }

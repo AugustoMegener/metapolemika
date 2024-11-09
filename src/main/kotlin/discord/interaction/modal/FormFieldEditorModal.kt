@@ -3,11 +3,12 @@ package kito.metapolemika.discord.interaction.modal
 import dev.kordex.core.components.forms.CoordinatePair
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.components.forms.widgets.TextInputWidget
+import dev.kordex.core.i18n.types.Key
 import kito.metapolemika.core.form.FormBase
 
 
 class FormFieldEditorModal(val field: FormBase<*>.Field<*>) : ModalForm() {
-    override var title = "Defina o campo da ficha"
+    override var title = Key("Defina o campo da ficha")
 
     val text = (when (field.sizeRange.last) {
         in 2001..5000 -> ::paragraphText

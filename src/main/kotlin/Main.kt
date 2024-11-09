@@ -17,8 +17,8 @@ suspend fun main() {
         register()
     }
 
-
     ResourceManager.start()
         DatabaseApp.start()
          DiscordApp.main()
 }
+

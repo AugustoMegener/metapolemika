@@ -5,4 +5,4 @@ import kito.metapolemika.reflect.ObjectRegister
 
 
 @ObjectRegister.Registry("EXTENSION")
-abstract class BaseExtension<A : Any> : Extension()
+abstract class BaseExtension : Extension()

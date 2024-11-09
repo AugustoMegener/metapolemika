@@ -7,28 +7,24 @@ import dev.kordex.core.commands.application.slash.SlashCommandContext
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.publicSlashCommand
-import dev.kordex.modules.dev.unsafe.annotations.UnsafeAPI
-import dev.kordex.modules.dev.unsafe.contexts.UnsafeCommandSlashCommandContext
-import dev.kordex.modules.dev.unsafe.extensions.unsafeSlashCommand
+import dev.kordex.core.i18n.types.Key
 import kito.metapolemika.discord.interaction.BaseExtension
-import kito.metapolemika.discord.interaction.command.SlashCommand.CommandType.*
+import kito.metapolemika.discord.interaction.command.SlashCommand.CommandType.EPHEMERAL
+import kito.metapolemika.discord.interaction.command.SlashCommand.CommandType.PUBLIC
 
 typealias PrivateCmdCtx<T> = EphemeralSlashCommandContext<T, Nothing>
 
-@OptIn(UnsafeAPI::class)
-typealias  UnsafeCmdCtx<T> = UnsafeCommandSlashCommandContext<T, Nothing>
+
 
 abstract class SlashCommand<A : Arguments, M: ModalForm, S: SlashCommand<C, A, M>, C : SlashCommandContext<C, A, M>>(
-    val commandName        : String,
-    val commandDescription : String,
-    val type               : CommandType,
-    val commandArguments   : () -> A,
-    val modalForm          : (() ->M)? = null
-) : BaseExtension<Unit>()
+    override val name               : String,
+             val commandName        : Key,
+             val commandDescription : Key,
+             val type               : CommandType,
+             val commandArguments   : () -> A,
+             val modalForm          : (() ->M)? = null
+) : BaseExtension()
 {
-    override val name = commandName
-
-    @OptIn(UnsafeAPI::class)
     override suspend fun setup() {
 
         val body: SlashCommand<*, *, *>.() -> Unit =
@@ -43,8 +39,6 @@ abstract class SlashCommand<A : Arguments, M: ModalForm, S: SlashCommand<C, A, M
             EPHEMERAL -> when(modalForm)
             { null -> ephemeralSlashCommand(arguments = { commandArguments() }, body = { body() })
               else -> ephemeralSlashCommand({ commandArguments() }, modalForm, { body() }) }
-
-            UNSAFE -> unsafeSlashCommand({ commandArguments() }) { body() }
         }
     }
 
@@ -57,6 +51,5 @@ abstract class SlashCommand<A : Arguments, M: ModalForm, S: SlashCommand<C, A, M
 
     abstract suspend fun C.commandAction(modal: M?)
 
-
-    enum class CommandType { PUBLIC, EPHEMERAL, UNSAFE }
+    enum class CommandType { PUBLIC, EPHEMERAL }
 }

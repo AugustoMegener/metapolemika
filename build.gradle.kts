@@ -1,7 +1,10 @@
-plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+import dev.kordex.gradle.plugins.kordex.DataCollection
 
+plugins {
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.serialization") version "2.0.21"
+
+    id("dev.kordex.gradle.kordex") version "+"
 }
 
 group = "kito.metapolemika"
@@ -18,13 +21,25 @@ repositories {
     }
 }
 
+kordEx {
+    bot {
+        dataCollection(DataCollection.Standard)
+
+        mainClass = "kito.metapolemika.MainKt"
+
+        module("dev-unsafe")
+    }
+
+    i18n {
+        classPackage = "src.main.kotlin.discord.i18n"
+        translationBundle = "metapolemika.strings"
+    }
+}
+
 dependencies {
     implementation(libs.kotlin.stdlib)
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation(kotlin("test"))
-
-    implementation(libs.kord.extensions)
-    implementation("dev.kordex:dev-unsafe")
 
     implementation("org.jetbrains.exposed:exposed-core:${project.property("exposed_version")}")
     implementation("org.jetbrains.exposed:exposed-dao:${project.property("exposed_version")}")
@@ -38,11 +53,20 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-spring-boot-starter:${project.property("exposed_version")}")
 
     implementation("org.postgresql:postgresql:${project.property("postgresql_version")}")
+
+    implementation("org.jetbrains.kotlin:kotlin-scripting-common")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")
+
+    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-core:1.4.11")
 }
+
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }

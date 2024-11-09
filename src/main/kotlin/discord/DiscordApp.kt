@@ -11,7 +11,9 @@ object DiscordApp {
     private val app by lazy {
         runBlocking {
             ExtensibleBot(env("TOKEN")) {
-                extensions { ObjectRegister.of<BaseExtension<*>>("EXTENSION").forEach { add { it } } }
+                extensions {
+                    ObjectRegister.of<BaseExtension>("EXTENSION").forEach { add { it } }
+                }
             }
         }
     }

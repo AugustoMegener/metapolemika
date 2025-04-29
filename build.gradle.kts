@@ -1,62 +1,75 @@
+import dev.kordex.gradle.plugins.kordex.DataCollection
+
 plugins {
-    kotlin("jvm") version "2.0.21"
-    /*kotlin("plugin.serialization") version "2.0.21"
+    kotlin("jvm") version "2.1.0"
+    kotlin("plugin.serialization") version "2.1.0"
 
-    id("dev.kordex.gradle.kordex") version "+"
-    id("com.google.devtools.ksp")  version "2.0.21-1.0.28"*/
-
-    idea
+    id("dev.kordex.gradle.kordex") version "1.5.8"
 }
 
-allprojects {
+group = "kito.metapolemika"
+version = "1.0-SNAPSHOT"
 
-    group = "kito.metapolemika"
-    version = "1.0-SNAPSHOT"
+repositories {
+    google()
+    mavenLocal()
+    mavenCentral()
 
-    repositories {
-        google()
-        mavenLocal()
-        mavenCentral()
+    maven {
+        name = "KordEx (Snapshots)"
+        url = uri("https://repo.kordex.dev/snapshots")
     }
 }
 
-subprojects {
-    apply(plugin = "idea")
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+kordEx {
+    bot {
+        dataCollection(DataCollection.Standard)
 
-    idea {
-        module {
-            val src = file("build/generated/ksp/main/kotlin")
+        mainClass = "kito.metapolemika.MainKt"
 
-            sourceDirs          =          sourceDirs + src
-            generatedSourceDirs = generatedSourceDirs + src
-        }
+        module("dev-unsafe")
     }
 
-    dependencies {
-        implementation(libs.kotlin.stdlib)
-        testImplementation(kotlin("test"))
-
-        implementation("ch.qos.logback:logback-classic:1.5.0")
-        implementation("ch.qos.logback:logback-core:1.5.0")
+    i18n {
+        classPackage = "src.main.kotlin.discord.i18n"
+        translationBundle = "metapolemika.strings"
     }
-
-    tasks.test { useJUnitPlatform() }
-
-    kotlin { jvmToolchain(21) }
 }
 
-/*repositories {
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-}*/
+dependencies {
+    implementation(libs.kotlin.stdlib)
+    testImplementation(kotlin("test"))
 
-/*ksp {
-    arg("ksp.incremental", "true")
-}*/
+    implementation("org.jetbrains.exposed:exposed-core:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-dao:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-crypt:${project.property("exposed_version")}")
 
-/*dependencies {
-    implementation("com.google.dagger:dagger-compiler:2.51.1")
-    ksp("com.google.dagger:dagger-compiler:2.51.1")
-    ksp("com.google.devtools.ksp:symbol-processing-api:2.0.21-1.0.28")
-}*/
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:${project.property("exposed_version")}")
 
+    implementation("org.jetbrains.exposed:exposed-json:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-money:${project.property("exposed_version")}")
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:" +
+            "${project.property("exposed_version")}")
+
+    implementation("org.postgresql:postgresql:${project.property("postgresql_version")}")
+    //implementation("mysql:mysql-connector-java:${project.property("mysql_version")}")
+
+    implementation("io.github.classgraph:classgraph:4.8.162")
+
+    implementation("org.jetbrains.kotlin:kotlin-scripting-common")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")
+
+    implementation("ch.qos.logback:logback-classic:1.4.12")
+    implementation("ch.qos.logback:logback-core:1.5.13")
+}
+
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+kotlin {
+    jvmToolchain(21)
+}

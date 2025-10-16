@@ -1,7 +1,7 @@
 import dev.kordex.gradle.plugins.kordex.DataCollection
 
 plugins {
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.1.21"
     kotlin("plugin.serialization") version "2.1.0"
 
     id("dev.kordex.gradle.kordex") version "1.5.8"

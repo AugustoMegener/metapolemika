@@ -5,24 +5,12 @@ import kito.metapolemika.core.form.FormBase
 import kito.metapolemika.core.form.sheet.SheetForm.Companion.SHEET
 import kito.metapolemika.database.table.sheet.ISheet
 import kito.metapolemika.reflect.ClassRegister
-import kotlinx.serialization.*
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
-import kotlin.reflect.full.findAnnotation
-
 import kotlin.reflect.full.findAnnotations
-import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.full.primaryConstructor
 
 @ClassRegister.Registry(SHEET)
-@Serializable(SheetForm.Serializer::class)
-@SerialName(SHEET)
-@Polymorphic
-abstract class SheetForm< T>(val title: Key, val sheetClass: UUIDEntityClass<T>, val sheet: BaseSheetForm) :
+abstract class SheetForm<T>(val title: Key, val sheetClass: UUIDEntityClass<T>, val sheet: BaseSheetForm) :
     FormBase<ISheet<T>>() where T : UUIDEntity,
                                 T : ISheet<T>
 {
@@ -42,7 +30,7 @@ abstract class SheetForm< T>(val title: Key, val sheetClass: UUIDEntityClass<T>,
         const val SHEET = "sheet"
     }
 
-    object Serializer : KSerializer<SheetForm<*>> {
+    /*object Serializer : KSerializer<SheetForm<*>> {
         override val descriptor = buildClassSerialDescriptor("sheet")
 
         @OptIn(ExperimentalSerializationApi::class)
@@ -79,5 +67,5 @@ abstract class SheetForm< T>(val title: Key, val sheetClass: UUIDEntityClass<T>,
             }
         }
 
-    }
+    }*/
 }

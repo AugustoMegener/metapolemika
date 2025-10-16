@@ -8,6 +8,7 @@ import kito.metapolemika.core.form.FieldMode.Mandatory
 import kito.metapolemika.core.form.sheet.SheetForm.Companion.SHEET
 import kito.metapolemika.database.entity.sheet.CharacterData
 import kito.metapolemika.reflect.ClassRegister
+import kotlinx.serialization.Serializable
 import src.main.kotlin.discord.i18n.Translations.Forms.Sheet.Character.Field.Error
 import src.main.kotlin.discord.i18n.Translations.Forms.Sheet.Character.Field.Instruction
 import src.main.kotlin.discord.i18n.Translations.Forms.Sheet.Character.Field.Name
@@ -36,4 +37,6 @@ class CharacterForm(sheet: BaseSheetForm) :
 
     val personality = Field("💝", Name.personality, Instruction.personality, 200..5000, Mandatory, noValidation, pure) {
         self.personality = it }
+
+    object Serializer : SheetSerializer<CharacterForm>()
 }

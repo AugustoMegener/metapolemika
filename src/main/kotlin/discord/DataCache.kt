@@ -2,38 +2,63 @@ package kito.metapolemika.discord
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Entity
-import kito.metapolemika.core.form.sheet.SheetForm
+import kito.metapolemika.core.form.sheet.SaveableSheetForm
+import kito.metapolemika.database.entity.DiscordEntityCacheData
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.annotations.ApiStatus
+import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.reflect.KProperty
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class DefineType
 
 private val entityCache = HashMap<Snowflake, EntityCache>()
 
-val Snowflake.cache get() = entityCache.computeIfAbsent(this) { EntityCache() }
+val Snowflake.cache get() = run {
+    val id = this
+
+    transaction {
+        entityCache.computeIfAbsent(id) {
+            EntityCache(
+                DiscordEntityCacheData.findById(value.toLong())?.data?.let { Json.decodeFromString(it) } ?: mapOf()
+            )
+        }
+    }
+}
+
 val Entity   .cache get() = id.cache
 
 inline infix fun <reified T> Snowflake.cacheOf(type: CacheType<T>) = cache of type
 inline infix fun <reified T> Entity   .cacheOf(type: CacheType<T>) = cache of type
 
-@DefineType
-val unfinishedSheets = CacheType<ArrayList<SheetForm<*>>> { arrayListOf() } .persist()
+val unfinishedSheets = CacheType<ArrayList<SaveableSheetForm>>("unfinished_sheets") { arrayListOf() } .persist()
 
 @Suppress("UNCHECKED_CAST")
-class EntityCache {
+class EntityCache(val oldData: Map<String, String>) {
+
     @ApiStatus.Internal
     val cache = hashMapOf<CacheType<*>, Cache<*>>()
 
     inline infix fun <reified T> of(type: CacheType<T>) =
-        cache.computeIfAbsent(type) { Cache(type.default(), serializer<T>()) } as Cache<T>
+        cache.computeIfAbsent(type) {
+            Cache(oldData[type.id]?.let { Json.decodeFromString(it) } ?: type.default(), serializer<T>())
+        } as Cache<T>
+
+    fun encode() = Json.encodeToString(oldData + cache.map { (k, v) -> k.id to v.encode() }.toMap())
+
+    fun save(id: Snowflake) {
+        transaction {
+
+            val cache = DiscordEntityCacheData.findById(id.value.toLong())
+
+            val foo = encode()
+
+            if (cache != null) cache.data = foo
+            else DiscordEntityCacheData.new(id.value.toLong()) { data = foo }
+        }
+    }
 }
 
-class CacheType<T>(val default: () -> T) {
+class CacheType<T>(val id: String, val default: () -> T) {
     var shouldSave = false; private set
 
     fun persist() = also { shouldSave = true }

@@ -21,7 +21,9 @@ import dev.kordex.modules.dev.unsafe.extensions.unsafeStringSelectMenu
 import kito.metapolemika.core.SheetType
 import kito.metapolemika.core.Validation.Invalid
 import kito.metapolemika.core.form.sheet.BaseSheetForm
+import kito.metapolemika.core.form.sheet.SaveableSheetForm
 import kito.metapolemika.discord.accessing
+import kito.metapolemika.discord.cache
 import kito.metapolemika.discord.cacheOf
 import kito.metapolemika.discord.interaction.BaseExtension.Companion.EXTENSION
 import kito.metapolemika.discord.interaction.command.NewSheetCommand.Args
@@ -57,7 +59,8 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
         if (sheets.isEmpty()) {
             respondPublic { content = Keys.seeDm.withLocale(locale).translate() }
 
-            sheets += BaseSheetForm(user.id, arguments.type).specify()
+            sheets += SaveableSheetForm(BaseSheetForm(user.id, arguments.type).specify())
+            user.cache.save(user.id)
             startSheetEditing(0)
         } else {
             respondEphemeral {
@@ -83,8 +86,8 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
                 placeholder = Keys.AlreadyExists.Select.existingSheets
 
                 sheets.forEachIndexed { i, s ->
-                    option((s.sheet.name.input ?: "???").toKey(), "$i") {
-                        description = s.title;
+                    option((s.form.sheet.name.input ?: "???").toKey(), "$i") {
+                        description = s.form.title;
                         emoji       = DiscordPartialEmoji(name="📝")
                     }
                 }
@@ -118,7 +121,8 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
 
                         respond { content = "-# ." }.delete()
 
-                        sheets += BaseSheetForm(user.id, SheetType.entries[selected.last().toInt()]).specify()
+                        sheets += SaveableSheetForm(BaseSheetForm(user.id, SheetType.entries[selected.last().toInt()]).specify())
+                        user.cache.save(user.id)
                         ctx.startSheetEditing(sheets.lastIndex)
                     }
                 }
@@ -138,7 +142,8 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
 
                         respond { content = "-# ." }.delete()
 
-                        sheets += BaseSheetForm(user.id, ctx.arguments.type).specify()
+                        sheets += SaveableSheetForm(BaseSheetForm(user.id, ctx.arguments.type).specify())
+                        user.cache.save(user.id)
                         ctx.startSheetEditing(sheets.lastIndex)
                     }
                 }
@@ -156,12 +161,12 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
         Keys.Dm.let { key -> message = user.getDmChannel().createMessage {
             embed {
                 title       = "${key.title.withLocale(locale).translate()} — " +
-                               sheet.title.withLocale(locale).translate()
+                               sheet.form.title.withLocale(locale).translate()
                 description = key.description.withLocale(locale).translate()
 
                 footer { text = key.mandatory.withLocale(locale).translate() }
 
-                sheet.totalFields.forEach {
+                sheet.form.totalFields.forEach {
                     val input = it.input ?: return@forEach
                     val isValid = it.validation.isValid
 
@@ -180,7 +185,7 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
 
             components {
                 unsafeStringSelectMenu {
-                    sheet.totalFields.forEachIndexed { i, f ->
+                    sheet.form.totalFields.forEachIndexed { i, f ->
                         option(f.name.withPostProcessor { it + (if (f.required) "*" else "") +
                                                                (if (f.isValid && f.required) " 👍" else "") }, "$i") {
                             description = f.instructions
@@ -191,13 +196,15 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
                     initialResponse = InitialInteractionSelectMenuResponse.None
 
                     action {
-                        val field    = sheet.totalFields[selected.first().toInt()]
+                        val field    = sheet.form.totalFields[selected.first().toInt()]
                         val modal    = FormFieldEditorModal(field)
                         val response = modal.sendAndDeferPublic(this)
 
                         if (response == null) { interactionResponse?.delete(); return@action }
 
                         field.input = modal.text.value!!
+
+                        user.cache.save(user.id)
 
                         message!!.delete()
                         response.createPublicFollowup { content = "-# ." }.delete()
@@ -209,7 +216,7 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
                 ephemeralButton {
                     style        = ButtonStyle.Success
                     partialEmoji = DiscordPartialEmoji(name="✅")
-                    disabled     = !sheet.isValid
+                    disabled     = !sheet.form.isValid
 
                     action {
                         respond {
@@ -282,6 +289,7 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
 
                                     action {
                                         sheets.remove(sheet)
+                                        user.cache.save(user.id)
                                         message!!.delete()
 
                                         content=Keys.Cancel.Confirm.sucess.withLocale(locale).translate()
@@ -313,7 +321,7 @@ object NewSheetCommand : UnsafeSlashCommand<Args>("new_sheet", Keys.name, Keys.d
                 }
             }
 
-            val fields = sheet.totalFields
+            val fields = sheet.form.totalFields
 
             content = key.progress.withLocale(locale)
                                   .withPostProcessor { "-# $it" }
